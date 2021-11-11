@@ -211,24 +211,25 @@ def a_star(puzzle_start, weight=1.0):
         # print(curr_node.show(weight))  # show sequence in terminal (not necessary for final)
             
         if curr_node.state.h() == 0:  # checking for goal node
-#             print("goal!!!")  # yay
+            print("\n  *solution found*")  # yay
             return curr_node, num_nodes
         
         for new_node in expand(curr_node):  # expand current node if not the goal
-            print(("  searching for solutions with " + str(num_nodes) + " nodes generated..."), end = "\r")
-            num_nodes += 1
             node_ind = -1
             for i in range(len(reach)):
                 if reach[i] == new_node:
                     node_ind = i
             if node_ind == -1 or new_node.move < reach[node_ind].move:  # insert into frontier if not in reach/better move
+                print(("  searching for solutions with " + str(num_nodes) + " nodes generated..."), end = "\r")
+                num_nodes += 1  # repeated states arent added to the tree and arent counted
+
                 j = len(frontier)-1
                 while j >= 0 and frontier[j].f(weight) < new_node.f(weight):  # insertion sort for frontier priority
                     j -= 1
                 frontier.insert(j+1, new_node)  # insert before the node we're looking at
                 if node_ind != -1 and new_node.move < reach[node_ind].move:
                     reach[node_ind] = new_node  # tell reach we've seen this state
-    print("not goal...?")
+    print("\n  NO solution found")
     return curr_node, num_nodes  # if goal node isnt found then we just return the last node we looked at
 
 def expand(curr_node):
@@ -251,18 +252,18 @@ def trace_back(solution_node, weight):
     while curr_node != None:
         if curr_node.action != 0:  # append action if it is not the first node
             depth += 1
-            action_sequence.append(action_translation[curr_node.action])
-        f_sequence.append(str(curr_node.f(weight)))  # round(..., 2)
+            action_sequence.insert(0, action_translation[curr_node.action])
+        f_sequence.insert(0, str( round(curr_node.f(weight), 2) ))  # rounded for easy of reading
         curr_node = curr_node.parent
     return depth, action_sequence, f_sequence
 
 
 if __name__ == '__main__':
-    print("start...\n")
+    print("start...")
     
     # input_files = ['Input1.txt', 'Input2.txt', 'Input3.txt']  #'Sample_Input.txt', 'test.txt'
     input_files = os.listdir(os.getcwd() + "/Input")  # get all files in input dir
-    print("Input Files:", input_files)
+    # print("Input Files:", input_files)
     for file_i in range(len(input_files)):
         start_board = Puzzle()  # set up puzzles
         weights = [1.0, 1.2, 1.4]  # set of weights to run algo for --> you said I dont need to take input since all 3 should be generated for the final solution
@@ -293,8 +294,9 @@ if __name__ == '__main__':
         assert bool(temp_goal)
 
         file_num = 1
+        print()
         for weight in weights:
-            print("\nRunning Solution", file_num, "for", input_files[file_i])
+            print("Running Solution", file_num, "for", input_files[file_i])
             name = ""
             if file_num == 1:  # file naming stuff
                 name = "a"
