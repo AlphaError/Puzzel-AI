@@ -4,8 +4,8 @@
 # Kora S. Hughes - Artificial Intelligence Project 1: 11 Puzzel Problem with A*
 
 """ PROJECT NOTES
-1-2 students per project
 “Bramble system” → only 1 tile moves at a time
+1 person project
 
 standard:
  -11 tile problem
@@ -27,6 +27,7 @@ class Puzzle:
     Main Puzzle Class:
     - contains board and helper functions to navigate board
     '''
+    # Note: code was made with board dimension versatility in mind but I didnt really feel like testing it base 4x3
     def __init__(self, x=4, y=3):  # init with board dimensions
         assert type(x) == int and type(y) == int
         temp_board = []
@@ -41,17 +42,18 @@ class Puzzle:
         self.dimensions = (x, y)
 
     def __bool__(self):  # validating board
-        nums = []
+        seen_nums = []
         for y in self.board:  # is valid if all unique nums within size
             for x in y:
                 assert type(x) == int
-                if x in nums or x < 0 or x > self.size:
+                if x in seen_nums or x < 0 or x > self.size:
                     return False
                 else:
-                    nums.append(x)
+                    seen_nums.append(x)
         return True
     
     def __eq__(self, rhs):  # compare the position of all numbers on the board
+        # slightly more complex alternative to self.board == rhs.board
         if self.dimensions == rhs.dimensions:
             for i in range(self.dimensions[1]):
                 for j in range(self.dimensions[0]):
@@ -74,24 +76,20 @@ class Puzzle:
 #             print("[ " + out + " ]")
         return p_out
 
-    def flatten(self):
-        ''' helper for testing validity of boards '''
+    def flatten(self):  # ended up not using
+        ''' helper for testing validity of boards and hashing '''
         lst = []
         for row in self.board:
             for col in row:
                 lst.append(col)
         return lst
 
-    def random_fill(self):  # randomizer for board values in testing
+    def random_fill(self):  # randomizer for board values in testing (before test cases were posted)
         nums = random.sample(range(0, self.size+1), self.size+1)
         # print("adding random board:", nums)
         self.fill(nums)
 
     def fill(self, vals):  # manually fill puzzle via nested list
-        '''
-        :param vals: 1d array of puzzle values
-        fills table
-        '''
         assert len(vals) == self.size+1
         i = 0
         for y in range(0, self.dimensions[1]):
@@ -107,9 +105,8 @@ class Puzzle:
         # assert bool(self)
         # assert bool(ideal_board)
         h_sum = 0
-        
         for i in range(1, self.size+1):  # get the sum of the differences of every numbers' position
-            ideal_coords = ideal_board.get_num(i)
+            ideal_coords = ideal_board.get_num(i)  # coordinates of i in the board(s)
             curr_coords = self.get_num(i)
             # make max the two instead of adding for chessboard distance
             value = abs(ideal_coords[0]-curr_coords[0]) + abs(ideal_coords[1]-curr_coords[1])
@@ -148,9 +145,8 @@ class Puzzle:
                 move_tile = self.board[zero_place[0]][zero_place[1]+1]
                 self.board[zero_place[0]][zero_place[1]+1] = 0
                 self.board[zero_place[0]][zero_place[1]] = move_tile
-            
         else:
-            print("serious problem with action script")
+            print("problem with action script")
     
     def get_num(self, num):
         ''' helper that finds the (index) position of a number within this board '''
@@ -191,70 +187,67 @@ class Node:
             return self.state == rhs.state  # and self.move == rhs.move
         return False
     
-    def f(self, weight=1.0):  # weight = 1.2?, weight = 1.4?
-        return self.move + weight*self.state.h()
+    def f(self, h_weight=1.0):  # weight = 1.2?, weight = 1.4
+        return self.move + h_weight*self.state.h()
         
-def a_star(puzzle_start, weight=1.0):
+def a_star(puzzle_start, h_weight=1.0):
     '''
     Main Algorithm: A*
     -takes in starting puzzle, weight and global goal state
     uses manhattan distance heuristic h(n) 
     and path cost, aka sum(moves), g(n) 
-    to search for puzzle solution
+    to search for puzzle solution node (with backtracked path)
     '''
     curr_node = Node(puzzle_start, 0, 0, None)
     frontier = [curr_node]  # priority queue
-    reach = []  # no repeats // was having trouble creating proper hashing for puzzles so is just a list
+    reach = {}  # no repeats
     num_nodes = 1
     while len(frontier) != 0:
         curr_node = frontier.pop()  # get next node from frontier
-        # print(curr_node.show(weight))  # show sequence in terminal (not necessary for final)
-            
+        # print(curr_node.show(h_weight))  # show sequence in terminal (not necessary for final)
         if curr_node.state.h() == 0:  # checking for goal node
+            # heuristic is 0 @ goal
             print("\n  *solution found*")  # yay
             return curr_node, num_nodes
         
         for new_node in expand(curr_node):  # expand current node if not the goal
-            node_ind = -1
-            for i in range(len(reach)):
-                if reach[i] == new_node:
-                    node_ind = i
-            if node_ind == -1 or new_node.move < reach[node_ind].move:  # insert into frontier if not in reach/better move
+            temp_key = str(new_node.state.board)  # stringified state is the key -> easier for hashing
+            if temp_key not in reach or new_node.move < reach[temp_key].move:
                 print(("  searching for solutions with " + str(num_nodes) + " nodes generated..."), end = "\r")
                 num_nodes += 1  # repeated states arent added to the tree and arent counted
 
                 j = len(frontier)-1
-                while j >= 0 and frontier[j].f(weight) < new_node.f(weight):  # insertion sort for frontier priority
+                while j >= 0 and frontier[j].f(h_weight) < new_node.f(h_weight):  # insertion sort for frontier priority
                     j -= 1
                 frontier.insert(j+1, new_node)  # insert before the node we're looking at
-                if node_ind != -1 and new_node.move < reach[node_ind].move:
-                    reach[node_ind] = new_node  # tell reach we've seen this state
+                reach[temp_key] = new_node  # add node and key into reach (or replace if already existing)
     print("\n  NO solution found")
     return curr_node, num_nodes  # if goal node isnt found then we just return the last node we looked at
+    # Note: this will also return the last seen/closest node to solution in case of failure as opposed to goal state
 
 def expand(curr_node):
     ''' yields children of the current state as edited by various, allowed actions'''
     for i in range(1, 5):  # types of actions
         new_state = curr_node.state.copy()
         new_state.action(i)  # make a puzzle copy with the new action done
-        new_node = Node(new_state, curr_node.move+1, i, curr_node)
-        if curr_node != new_node:
+        new_node = Node(new_state, curr_node.move+1, i, curr_node)  # make new node out of new state
+        if curr_node.state.board != new_node.state.board:  # no need to look at new actions that make no progress
             yield new_node  # generator for expanded next states
 
 
-def trace_back(solution_node, weight):
+def trace_back(solution_node, h_weight):
     ''' returns information of the path solution based on the goal node '''
-    depth = 0
-    action_sequence = []
+    depth = 0  # depth of tree
+    action_sequence = []  # actions taken from start to goal
     f_sequence = []  # sequence of f(n) values
     
     curr_node = solution_node
     while curr_node != None:
         if curr_node.action != 0:  # append action if it is not the first node
-            depth += 1
-            action_sequence.insert(0, action_translation[curr_node.action])
-        f_sequence.insert(0, str( round(curr_node.f(weight), 2) ))  # rounded for easy of reading
-        curr_node = curr_node.parent
+            depth += 1  # inc depth
+            action_sequence.insert(0, action_translation[curr_node.action])  # insert/queue into first position (order)
+        f_sequence.insert(0, str( round(curr_node.f(h_weight), 2) ))  # rounded for easy of reading
+        curr_node = curr_node.parent  # trace up to parent
     return depth, action_sequence, f_sequence
 
 
@@ -263,19 +256,17 @@ if __name__ == '__main__':
     
     # input_files = ['Input1.txt', 'Input2.txt', 'Input3.txt']  #'Sample_Input.txt', 'test.txt'
     input_files = os.listdir(os.getcwd() + "/Input")  # get all files in input dir
-    # print("Input Files:", input_files)
-    for file_i in range(len(input_files)):
+    for file_i in range(len(input_files)):  # run code on all files in director
         start_board = Puzzle()  # set up puzzles
-        weights = [1.0, 1.2, 1.4]  # set of weights to run algo for --> you said I dont need to take input since all 3 should be generated for the final solution
-
-        line_num = 1
+        weights = [1.0, 1.2, 1.4]  # set of weights to run algo for
+        # no input neede since all 3 weights should be generated for the final solution (talked to Prof)
+        line_num = 1  # keep track of line number to know which puzzle is which
         init_nums = []  # lists of values to enter into Puzzle class
         goal_nums = []
         for line in fileinput.FileInput(files = "Input/"+input_files[file_i]):  # .input
             nums = line.replace('\n', '').split(" ")  # take out breaks and seperate numbs
-            # Note: spacing can be a bit finicky so be careful of not combining numbers
-            # edge case with appended empty char in array
-            for temp in nums:
+            # Note: spacing can be a bit finicky so be careful of not combined numbers
+            for temp in nums: # edge case with appended empty char in array
                 if temp == '':
                     nums.remove(temp)
             if line_num < 4:  # save init state
@@ -285,20 +276,19 @@ if __name__ == '__main__':
                 for num in nums:
                     goal_nums.append(int(num))
             line_num += 1
-#         print("init nums:", init_nums)
-        start_board.fill(init_nums)   # fill puzzle
-        GOAL_BOARD = goal_nums  # overwrite default goal state
+        start_board.fill(init_nums)   # fill start puzzle
+        GOAL_BOARD = goal_nums  # overwrite default goal state (saved as global up top)
         temp_goal = Puzzle()
-        temp_goal.fill(GOAL_BOARD)
+        temp_goal.fill(GOAL_BOARD)  # create temp goal board for initial validation
         assert bool(start_board)   # double check to see if its a valid puzzle and this code can handle it
         assert bool(temp_goal)
 
         file_num = 1
-        print()
-        for weight in weights:
+        print()  # spacing in terminal
+        for weight in weights:  # get new output per weight
             print("Running Solution", file_num, "for", input_files[file_i])
             name = ""
-            if file_num == 1:  # file naming stuff
+            if file_num == 1:  # file naming convention per requirements pdf
                 name = "a"
             elif file_num == 2:
                 name = "b"
