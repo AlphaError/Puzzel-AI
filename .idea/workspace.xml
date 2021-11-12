@@ -5,16 +5,8 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="698e6cbf-5d27-40ad-ae70-d1c1af72c827" name="Changes" comment="">
-      <change beforePath="$PROJECT_DIR$/Output/output1a.txt" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Output/output1b.txt" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Output/output1c.txt" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Output/output2a.txt" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Output/output2b.txt" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Output/output2c.txt" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Output/output3a.txt" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Output/output3b.txt" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Output/output3c.txt" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/jup-puzzle.py" beforeDir="false" afterPath="$PROJECT_DIR$/jup-puzzle.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/README.txt" beforeDir="false" afterPath="$PROJECT_DIR$/README.txt" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
